@@ -1,20 +1,34 @@
 <?php
-$connection = new PDO('mysql:host=localhost; dbname=teatr; charset=UTF8', 'root', 'root');
+include_once ('core/arr.php');
+include_once ('model/user.php');
 
-$checkPlace = $connection->query("SELECT * FROM place WHERE idx = '0'");
-if ($_POST['name']) {
-    $name = $_POST['name'];
-    $surname = $_POST['surname'];
-    $place = $_POST['place'];
-    var_dump($_POST);
-    $connection->query("INSERT INTO name (name, surname) VALUES ('$name', '$surname')");
-    $connection->query("UPDATE place SET idx = '1' WHERE place = '$place' ");
+$checkPlace = select();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $person = extractFields($_POST, ['name', 'surname']);
+    $validate = validate($person);
+    if (empty($validate)) {
+        insert($person);
+        $placeOld = extractFields($_POST, ['place']);
+        update($placeOld['place']);
+        header('Location:index.php');
+    }
+
+}
+
+else {
+    $validate = [];
+    $person = ['name' => '', 'surname' => ''];
 }
 
 ?>
 <form method="post">
-    <input type="text" name="name" required><br>
-    <input type="text" name="surname" required><br>
+    <div>
+        <?foreach ($validate as $value):?>
+            <p><?=$value?></p>
+        <?endforeach;?>
+    </div>
+    <input type="text" name="name" value="<?=$person['name']?>" required><br>
+    <input type="text" name="surname" value="<?=$person['surname']?>" required><br>
     <select name="place" id="place">
             <?foreach ($checkPlace as $place):?>
             <option value="<?=$place['place']?>"><?=$place['place']?></option>
